@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: project-pal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: project-pal
+  template:
+    metadata:
+      labels:
+        app: project-pal
+    spec:
+      containers:
+      - name: project-pal
+        image: porterpants/project-pal:latest
+        ports:
+        - containerPort: 80
+

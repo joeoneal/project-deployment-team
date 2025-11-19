@@ -38,3 +38,13 @@ CREATE TABLE projects (
 | **Edit Project** | `PUT` | `/projects/<id>` | Updates the project matching the specified `id` with data from the JSON request body. |
 | **Delete Project** | `DELETE` | `/projects/<id>` | Deletes the project matching the specified `id`. |
 | **CORS Preflight** | `OPTIONS`| `/projects/<id>` | Handles CORS preflight requests for `PUT` and `DELETE` methods. |
+
+
+## Docker Build & Push
+docker build -t <dockerhub-username>/project-pal:latest .
+docker push <dockerhub-username>/project-pal:latest
+
+## Kubernetes Deployment
+kubectl apply -f k8s/deploy.yaml
+kubectl apply -f k8s/service.yaml
+kubectl apply -f k8s/ingress.yaml
