@@ -41,8 +41,8 @@ CREATE TABLE projects (
 
 
 ## Docker Build & Push
-docker build -t <dockerhub-username>/project-pal:latest .
-docker push <dockerhub-username>/project-pal:latest
+docker build -t yourusername/project-pal:latest .
+docker push yourusername/project-pal:latest
 
 ## Kubernetes Deployment
 kubectl apply -f k8s/deploy.yaml
