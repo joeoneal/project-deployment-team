@@ -27,7 +27,7 @@ def register_user():
         return "Missing email or password", 400
 
     hashed_pw = generate_password_hash(data['password'])
-    db = DB('tickets.db')
+    db = DB("/app/server/tickets.db")
     user_id = db.createUser(data['first_name'], data['last_name'], data['email'], hashed_pw)
     
     if user_id:
@@ -41,7 +41,7 @@ def login():
     if not data or 'email' not in data or 'password' not in data:
         return "Missing credentials", 400
         
-    db = DB('tickets.db')
+    db = DB("/app/server/tickets.db")
     user = db.get_user_by_email(data['email'])
     
     if user and check_password_hash(user['password'], data['password']):
@@ -69,7 +69,7 @@ def logout():
 
 @app.route('/tickets', methods=['GET'])
 def get_tickets():
-    db = DB("tickets.db")
+    db = DB("/app/server/tickets.db")
     tickets = db.readAllRecords()
     return tickets, 200, {'Access-Control-Allow-Origin':'*'}
 
@@ -77,14 +77,14 @@ def get_tickets():
 def add_ticket():
     ticket = request.get_json()
     print(ticket)
-    db = DB("tickets.db")
+    db = DB("/app/server/tickets.db")
     db.saveRecord(ticket)
     return "Created", 201, {'Access-Control-Allow-Origin':'*'}
 
 @app.route('/tickets/<int:id>', methods=['DELETE'])
 def delete_ticket(id):
     print('Deleting ticket', id)
-    db = DB("tickets.db")
+    db = DB("/app/server/tickets.db")
     ticket = db.getRecord(id)
     if ticket:
         db.deleteRecord(id)
@@ -96,7 +96,7 @@ def delete_ticket(id):
 @app.route('/tickets/<int:id>', methods=['PUT'])
 def edit_ticket(id):
     print('Editing ticket')
-    db = DB("tickets.db")
+    db = DB("/app/server/tickets.db")
     ticket = db.getRecord(id)
     if ticket:
         data = request.get_json()
