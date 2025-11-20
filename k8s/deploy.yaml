@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: project-pal
-        image: porterpants/project-pal:v2
+        image: porterpants/project-deployment-team:latest
         ports:
         - containerPort: 80
 
