@@ -2,7 +2,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir Flask
+RUN pip install --no-cache-dir Flask Werkzeug
 
 COPY server/ ./server
 COPY client/ ./client
