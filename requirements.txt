@@ -1,2 +1,3 @@
 flask
-squlite3
+sqlite3
+werkzeug.security

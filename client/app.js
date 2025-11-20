@@ -1,53 +1,109 @@
-console.log("connected!")
+console.log('connected!')
 
-function header_section() {
+function render_header(show_logout) {
     let headerContainer = document.createElement('header')
-    let header = document.createElement('h1')
-    header.textContent = 'Project Pal - Stay Organized'
-    let sub = document.createElement('h2')
-    sub.textContent = 'All of your projects in one place!'
+    let title = document.createElement('h1')
+    title.textContent = "Ticket Suppport"
+    headerContainer.append(title)
 
-    let new_project = document.createElement('button')
-    new_project.textContent = 'New Project'
-    new_project.id = 'add_button'
+    if (show_logout) {
+        let subtitle = document.createElement('h2')
+        let logoutButton = document.createElement('button')
+        let name = localStorage.getItem('first-name') || 'User'
 
-    new_project.addEventListener('click', function() {
-        console.log('clicked')
-        document.getElementById('project-form').style.display = 'flex';
-    })
+        subtitle.textContent = `Welcome, ${name}!`
+        logoutButton.innerText = "LOGOUT"
+        logoutButton.setAttribute('id', 'logout-button')
 
-    let titleGroup = document.createElement('div');
-    titleGroup.className = 'title-group'; // Add a class for styling
-    titleGroup.appendChild(header);
-    titleGroup.appendChild(sub);
-    headerContainer.appendChild(titleGroup);
-    headerContainer.appendChild(new_project);
+        let switchLabel = document.createElement('label');
+        switchLabel.className = 'switch';
+    
+        let checkBox = document.createElement('input');
+        checkBox.type = 'checkbox';
+    
+        if (localStorage.getItem('theme') === 'dark') {
+            checkBox.checked = true;
+        }
+    
+        let sliderSpan = document.createElement('span');
+        sliderSpan.className = 'slider';
+    
+        checkBox.addEventListener('change', function() {
+            if (checkBox.checked) {
+                document.body.classList.add('dark-mode');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.body.classList.remove('dark-mode');
+                localStorage.setItem('theme', 'light');
+            }
+        });
 
-    document.body.appendChild(headerContainer)
+        switchLabel.appendChild(checkBox);
+        switchLabel.appendChild(sliderSpan);
+    
+        logoutButton.onclick = handle_logout
+        headerContainer.append(subtitle, switchLabel, logoutButton)
     }
+    document.body.prepend(headerContainer)
+}
 
-function load_projects() {
-    console.log('load entered')
-    let container = document.getElementById('proj-container')
+function home_layout() {
+    // header section //
+    document.body.innerHTML = ''
+    render_header(true)
+
+    // body section //
+    let bodyContainer = document.createElement('div')
+    bodyContainer.setAttribute('id', 'body-container')
+
+    let toolbar = document.createElement('div')
+    toolbar.setAttribute('id', 'toolbar')
+    
+    let bodyTitle = document.createElement('h3')
+    let newTicketButton = document.createElement('button')
+    let t_title = document.createElement('h4')
+    let t_urgency= document.createElement('h4')
+    let t_status = document.createElement('h4')
+
+
+    bodyTitle.textContent = 'Current Tickets'
+    newTicketButton.innerText = 'New Ticket'
+    t_title.textContent= "Title"
+    t_urgency.textContent = 'Urgency'
+    t_status.textContent = 'Status'
+    newTicketButton.setAttribute('id', 'new-ticket')
+
+    newTicketButton.addEventListener('click', function() {
+        console.log('clicked new ticket')
+        document.getElementById('ticket-form').style.display = 'flex';
+    })
+    
+    toolbar.append(bodyTitle, newTicketButton)
+    bodyContainer.append(toolbar, t_title, t_urgency, t_status)
+    document.body.append(bodyContainer)
+}
+
+function load_tickets() {
+    // console.log('load entered')
+    let container = document.getElementById('tickets-container')
     if (!container) {
         container = document.createElement('div')
-        container.id = 'proj-container'
+        container.id = 'tickets-container'
         document.body.appendChild(container)
     }
 
     container.innerHTML = ''
 
-    fetch('/projects')
+    fetch('/tickets')
     .then(function (response) {
         response.json()
             .then(function (data) {
                 console.log(data)
-                data.reverse().forEach(project => {
-                    let project_container = document.createElement('div')
-                    let name = document.createElement('h3')
-                    let client = document.createElement('p')
-                    let due = document.createElement('p')
-                    let description = document.createElement('p')
+                data.reverse().forEach(ticket => {
+                    let ticket_container = document.createElement('div')
+                    let title = document.createElement('h3')
+                    let urgency = document.createElement('p')
+                    let status = document.createElement('p')
 
                     let delete_button = document.createElement('button')
                     delete_button.textContent = 'delete'
@@ -57,40 +113,34 @@ function load_projects() {
                     edit_button.textContent = 'edit'
                     edit_button.id = 'edit-button'
 
-                    name.textContent = project.name
-                    client.textContent = project.client
-                    due.textContent = project.due_date
-                    description.textContent = project.description
-                    delete_button.dataset.id = project.id
+                    title.textContent = ticket.title
+                    urgency.textContent = ticket.urgency
+                    status.textContent = ticket.status
+                    delete_button.dataset.id = ticket.id
 
-                    edit_button.dataset.project = JSON.stringify(project)
+                    if (ticket.urgency === 'Critical') {
+                        urgency.className = 'critical-text'; 
+                    }
 
-                    project_container.appendChild(name)
-                    project_container.appendChild(client)
-                    project_container.appendChild(due)
-                    project_container.appendChild(description)
-                    project_container.appendChild(delete_button)
-                    project_container.appendChild(edit_button)
+                    edit_button.dataset.ticket = JSON.stringify(ticket)
 
-                    delete_button.addEventListener('click', delete_project)
-                    edit_button.addEventListener('click', edit_project)
+                    ticket_container.append(title, urgency, status, delete_button, edit_button)
 
-                    container.appendChild(project_container)
+                    delete_button.addEventListener('click', delete_ticket)
+                    edit_button.addEventListener('click', edit_ticket)
+
+                    container.appendChild(ticket_container)
                 })
             })
     })
-    console.log('finished load')
+    console.log('load finished')
 }
 
-function load_form() {
-    console.log('load form entered')
+function new_ticket_form() {
     let form = document.createElement('form')
-
     let title = document.createElement('input')
-    let client = document.createElement('input')
-    let date = document.createElement('input')
-    let description = document.createElement('input')
-
+    let urgency = document.createElement('select')
+    let status = document.createElement('select')
     let button = document.createElement('button')
 
     title.id = 'title-input'
@@ -98,59 +148,80 @@ function load_form() {
     title.required = true
     title.type = 'text'
     
-    client.id = 'client-input'
-    client.placeholder = 'Client Name'
-    client.required = true
-    client.type = 'text'
+    urgency.id = 'urgency-input'
+    urgency.required = true
+    let urgency_levels = ['Select Urgency', 'Low', 'Medium', 'High', 'Critical']
+    urgency_levels.forEach((level, index) => {
+        let option = document.createElement('option')
+        option.textContent = level
+        option.value = level
 
-    date.id = 'date-input'
-    date.placeholder = 'Due Date (MM/DD/YYYY)'
-    date.required = true
-    date.type = 'text'
+        if (index === 0) {
+            option.value = "" // Empty value triggers the 'required' check
+            option.disabled = true // User can't select it again
+            option.selected = true // Selected by default
+        }
+        urgency.appendChild(option)
+    })
 
-    description.id = 'description-input'
-    description.placeholder = 'Project Description'
-    description.required = true
-    description.type = 'text'
+    status.id = 'status-input'
+    status.required = true
+    let statusLevels = ['Select Status', 'Open', 'In Progress', 'Closed']
+    
+    statusLevels.forEach((level, index) => {
+        let option = document.createElement('option')
+        option.textContent = level
+        option.value = level
+        
+        // Logic for the "Placeholder"
+        if (index === 0) {
+            option.value = ""
+            option.disabled = true
+            option.selected = true
+        }
+        status.appendChild(option)
+    })
 
     button.id = 'submit-button'
     button.type = 'submit'
-    button.textContent = 'Add Project'
+    button.textContent = 'Add Ticket'
 
-    form.id = 'project-form'
+    form.id = 'ticket-form'
 
-    form.append(title, client, date, description, button)
-    document.body.appendChild(form)
+    form.append(title, urgency, status, button)
+    
+    button.addEventListener('click', hide_form)
+    form.addEventListener('submit', add_ticket)
 
-    button.addEventListener('click', function() {
-        console.log('hide form should happen')
-        document.getElementById('project-form').style.display = 'none';
-    })
-    form.addEventListener('submit', add_project)
+    document.body.append(form)
+    form.style.display = 'None'
+
 }
 
-function add_project(event) {
+function hide_form() {
+    document.getElementById('ticket-form').style.display = 'None'
+    console.log('form should be hidden')
+}
+
+function add_ticket(event) {
     event.preventDefault()
-    console.log("now recording")
+    console.log('add ticket clicked')
 
     let t = document.getElementById('title-input')
     let t_text = t.value
 
-    let c = document.getElementById('client-input')
-    let c_text = c.value
+    let u = document.getElementById('urgency-input')
+    let u_text = u.value
 
-    let dt = document.getElementById('date-input')
-    let dt_text = dt.value
+    let s = document.getElementById('status-input')
+    let s_text = s.value
 
-    let ds = document.getElementById('description-input')
-    let ds_text = ds.value
-
-    fetch("/projects", {
+    fetch("/tickets", {
         method: 'POST',
         headers: {
             'Content-Type':'application/json'
         },
-        body: JSON.stringify({title: t_text, client: c_text, due_date: dt_text, description: ds_text})
+        body: JSON.stringify({title: t_text, urgency: u_text, status: s_text})
     })
     .then(function (response) {
         if (response.ok) {
@@ -158,32 +229,31 @@ function add_project(event) {
                 .then(function (data) {
                     console.log(data)
                     t.value = ''
-                    c.value = ''
-                    dt.value = ''
-                    ds.value = ''
-                    load_projects()
+                    u.value = ''
+                    s.value = ''
+                    load_tickets()
                 })
             } else{
                 console.error('sever responded with error: ', response.status)
             }
         })
-    }
+}
 
-function delete_project(event) {
+function delete_ticket(event) {
     event.preventDefault()
     console.log('delete clicked')
 
-    const userConfirmed = confirm("Are you sure you want to delete this project?");
+    const userConfirmed = confirm("Are you sure you want to delete this ticket?");
     if (userConfirmed) {
         let id = event.target.dataset.id;
-        fetch(`/projects/${id}`, {
+        fetch(`/tickets/${id}`, {
             method: 'DELETE'
         })
             .then(function (response) {
                 response.text()
                     .then(function (data) {
                         console.log(data)
-                        load_projects()
+                        load_tickets()
                     })
             })
         } else {
@@ -192,39 +262,56 @@ function delete_project(event) {
 }
 
 function load_edit_form() {
-    console.log('load edit form entered');
+    console.log('launching edit form');
     let form = document.createElement('form');
-    form.id = 'edit-form'; // Unique ID for the edit form
-    form.style.display = 'none'; // Hide it by default
+    form.id = 'edit-form'; 
+    form.style.display = 'none'; 
 
-    // Hidden input to store the project ID
     let idInput = document.createElement('input');
     idInput.type = 'hidden';
     idInput.id = 'edit-id-input';
 
-    let name = document.createElement('input');
-    name.id = 'edit-name-input';
-    name.placeholder = 'Title';
-    name.required = true;
-    name.type = 'text';
+    let title = document.createElement('input');
+    title.id = 'edit-title-input';
+    title.placeholder = 'Title';
+    title.required = true;
+    title.type = 'text';
     
-    let client = document.createElement('input');
-    client.id = 'edit-client-input';
-    client.placeholder = 'Client Name';
-    client.required = true;
-    client.type = 'text';
+    let urgency = document.createElement('select')
+    urgency.id = 'edit-urgency-input'
+    urgency.required = true
+    let urgency_levels = ['Select Urgency', 'Low', 'Medium', 'High', 'Critical']
+    urgency_levels.forEach((level, index) => {
+        let option = document.createElement('option')
+        option.textContent = level
+        option.value = level
 
-    let date = document.createElement('input');
-    date.id = 'edit-date-input';
-    date.placeholder = 'Due Date (MM/DD/YYYY)';
-    date.required = true;
-    date.type = 'text';
+        if (index === 0) {
+            option.value = "" 
+            option.disabled = true 
+            option.selected = true 
+        }
+        urgency.appendChild(option)
+    })
 
-    let description = document.createElement('input');
-    description.id = 'edit-description-input';
-    description.placeholder = 'Project Description';
-    description.required = true;
-    description.type = 'text';
+    let status = document.createElement('select')
+    status.id = 'edit-status-input'
+    status.required = true
+    let statusLevels = ['Select Status', 'Open', 'In Progress', 'Closed']
+    
+    statusLevels.forEach((level, index) => {
+        let option = document.createElement('option')
+        option.textContent = level
+        option.value = level
+        
+        // Logic for the "Placeholder"
+        if (index === 0) {
+            option.value = ""
+            option.disabled = true
+            option.selected = true
+        }
+        status.appendChild(option)
+    })
 
     let save_button = document.createElement('button');
     save_button.id = 'save-button';
@@ -233,26 +320,25 @@ function load_edit_form() {
 
 
     form.appendChild(idInput)
-    form.appendChild(name)
-    form.appendChild(client)
-    form.appendChild(date)
-    form.appendChild(description)
+    form.appendChild(title)
+    form.appendChild(urgency)
+    form.appendChild(status)
     form.appendChild(save_button)
     document.body.appendChild(form);
 
     form.addEventListener('submit', handle_save_edit);
 }
 
-function edit_project(event){
+function edit_ticket(event) {
     console.log('edit button clicked');
     
-    const project = JSON.parse(event.target.dataset.project);
+    const ticket = JSON.parse(event.target.dataset.ticket);
 
-    document.getElementById('edit-id-input').value = project.id; 
-    document.getElementById('edit-name-input').value = project.name;
-    document.getElementById('edit-client-input').value = project.client;
-    document.getElementById('edit-date-input').value = project.due_date;
-    document.getElementById('edit-description-input').value = project.description;
+    document.getElementById('edit-id-input').value = ticket.id; 
+    document.getElementById('edit-title-input').value = ticket.title;
+    document.getElementById('edit-urgency-input').value = ticket.urgency;
+    document.getElementById('edit-status-input').value = ticket.status;
+
 
     document.getElementById('edit-form').style.display = 'flex';
 }
@@ -262,38 +348,208 @@ function handle_save_edit(event) {
     console.log("saving edits...")
 
     const id = document.getElementById('edit-id-input').value;
-    const name = document.getElementById('edit-name-input').value;
-    const client = document.getElementById('edit-client-input').value;
-    const dueDate = document.getElementById('edit-date-input').value;
-    const description = document.getElementById('edit-description-input').value;
+    const title = document.getElementById('edit-title-input').value;
+    const urgency = document.getElementById('edit-urgency-input').value;
+    const status = document.getElementById('edit-status-input').value;
 
-    const projectData = {
-        name: name,
-        client: client,
-        "due-date": dueDate,
-        description: description
+    const ticketData = {
+        title: title,
+        urgency: urgency,
+        status: status
     };
 
-    fetch(`/projects/${id}`, {
+    fetch(`/tickets/${id}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(projectData)
+        body: JSON.stringify(ticketData)
     })
         .then(function (response) {
             response.text()
                 .then(function (data) {
                     console.log(data)
                     document.getElementById('edit-form').style.display = 'none';
-                    load_projects()
+                    load_tickets()
                 })
         })
 }
 
-header_section()
-load_form()
-load_edit_form()
-load_projects()
 
 
+// AUTHENTICATION STUFF BELOW //
+function login_form() {
+    document.body.innerHTML = ''
+    render_header(false)
+    let login_container = document.createElement('div')
+    login_container.id = 'login-container'
+
+    let form = document.createElement('form')
+    form.id = 'auth-form'
+
+    let f_name = document.createElement('input')
+    let l_name = document.createElement('input')
+    let email = document.createElement('input')
+    let password = document.createElement('input')
+
+    f_name.id = 'first'
+    f_name.placeholder = 'First name'
+    f_name.type = 'text'
+    f_name.style.display = 'none'
+
+    l_name.id = 'last'
+    l_name.placeholder = 'Last name'
+    l_name.type = 'text'
+    l_name.style.display = 'none'
+
+    email.id = 'email'
+    email.placeholder = 'Email address'
+    email.required = true
+    email.type = 'text'
+
+    password.id = 'password'
+    password.placeholder = 'Password'
+    password.required = true
+    password.type = 'password'
+
+    let submit_button = document.createElement('button')
+    submit_button.id = 'submit-button'
+    submit_button.textContent = 'Login'
+    submit_button.type = 'submit'
+
+    let toggle_text = document.createElement('span')
+    toggle_text.textContent = " Don't have an account?"
+    toggle_text.style.cursor = 'pointer'
+    toggle_text.style.marginLeft = '10px'
+
+    toggle_text.addEventListener('click', function() {
+        if (f_name.style.display === 'none') {
+            f_name.style.display = 'block'
+            l_name.style.display = 'block'
+
+            f_name.required = true
+            l_name.required = true
+
+            submit_button.textContent = 'Register'
+            toggle_text.textContent = " Already have an account?"
+        } else {
+            f_name.style.display = 'none'
+            l_name.style.display = 'none'
+
+            f_name.required = false
+            l_name.required = false
+
+            submit_button.textContent = 'Login'
+            toggle_text.textContent = " Don't have an account?"
+        }
+    })
+
+    form.append(f_name, l_name, email, password, submit_button, toggle_text)
+
+    form.addEventListener('submit', handle_authorization)
+    login_container.append(form)
+    document.body.append(login_container)
+}
+
+function handle_authorization(event) {
+    event.preventDefault()
+
+    let submit = document.getElementById('submit-button')
+
+    if (submit.textContent === 'Register') {
+        register_user()
+    } else {
+        login_user()
+    }
+}
+
+function register_user() {
+    console.log('starting registration')
+
+    let first = document.getElementById('first').value
+    let last = document.getElementById('last').value
+    let email = document.getElementById('email').value
+    let password = document.getElementById('password').value
+
+    fetch('/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            first_name: first, 
+            last_name: last, 
+            email: email, 
+            password: password
+        })
+    })
+    .then(response => {
+        response.text().then(text => {
+            if (response.ok) {
+                alert("Registration successful! Please log in.");
+                location.reload(); 
+            } else {
+                alert("Registration Error: " + text);
+            }
+        });
+    });
+}
+
+function login_user() {
+    console.log('logging in')
+
+    let email = document.getElementById('email').value;
+    let password = document.getElementById('password').value;
+
+    fetch('/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            email: email, 
+            password: password 
+        })
+    })
+    .then(response => {
+        response.text().then(text => {
+            if (response.ok) {
+                console.log("Server response:", text);
+                let parts = text.split(':')
+                let sessionId = parts[1]
+                let first = parts[2]
+
+                console.log(`session id is ${sessionId}`)
+                console.log(`name is ${first}`)
+
+                createSession(sessionId)
+                localStorage.setItem('first-name', first)
+                main();
+            } else {
+                alert(text);
+            }
+        });
+    });
+}
+
+function handle_logout() {
+    delete_session()
+    localStorage.removeItem('first-name')
+}
+
+function main() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+    } else {
+        document.body.classList.remove('dark-mode');
+    }
+    const userId = localStorage.getItem('sessionID')
+    if (userId) {
+        home_layout()
+        new_ticket_form()
+        load_edit_form()
+        load_tickets()
+    } else {
+        console.log('running load logic')
+        login_form()
+    }
+}
+
+main()
